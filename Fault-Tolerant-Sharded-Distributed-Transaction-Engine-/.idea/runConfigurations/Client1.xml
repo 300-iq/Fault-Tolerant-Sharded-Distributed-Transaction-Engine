@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Client1" type="Application" factoryName="Application" singleton="false">
+    <option name="MAIN_CLASS_NAME" value="paxos.client.ClientApp" />
+    <module name="paxos.main" />
+    <option name="PROGRAM_PARAMETERS" value="benchmark smallbank 30000 96 0 0 0" />
+    <option name="VM_PARAMETERS" value="-DleaderTarget=localhost:50051 -Dpeer.1=localhost:50051 -Dpeer.2=localhost:50052 -Dpeer.3=localhost:50053 -Dpeer.4=localhost:50054 -Dpeer.5=localhost:50055 -Dpeer.6=localhost:50056 -Dpeer.7=localhost:50057 -Dpeer.8=localhost:50058 -Dpeer.9=localhost:50059 -Dconcurrent=true -DpauseBetweenSets=true -DperformanceMode=true" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

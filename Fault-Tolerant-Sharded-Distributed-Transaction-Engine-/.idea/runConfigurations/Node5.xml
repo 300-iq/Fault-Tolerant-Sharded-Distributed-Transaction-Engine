@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Node5" type="Application" factoryName="Application" singleton="false">
+    <option name="MAIN_CLASS_NAME" value="paxos.node.NodeServer" />
+    <module name="paxos.main" />
+    <option name="VM_PARAMETERS" value="-DnodeId=5 -Dport=50055 -DclusterId=2 -DshardRangeStart=3001 -DshardRangeEnd=6000 -Dpeer.1=localhost:50051 -Dpeer.2=localhost:50052 -Dpeer.3=localhost:50053 -Dpeer.4=localhost:50054 -Dpeer.5=localhost:50055 -Dpeer.6=localhost:50056 -Dpeer.7=localhost:50057 -Dpeer.8=localhost:50058 -Dpeer.9=localhost:50059 -Dheartbeat=50 -DenableCheckpointing=false -DminPrepareBackoff=120 -DmaxPrepareBackoff=240 -DprepareThrottle=150 -DreplTimeoutMs=1200 -DreplicationTimeout=1200 -DtwoPcRpcTimeoutMs=2000 -DtwoPcCommitMaxAttempts=5 -DtwoPcCommitBackoffMs=50 -DminLeaderTimeout=400 -DmaxLeaderTimeout=650 -DperformanceMode=true" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

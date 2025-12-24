@@ -1,0 +1,237 @@
+// I took the help of chat gpt for learning and generating proto file as I am not verify familiar with GRPC
+
+syntax = "proto3";
+option java_package = "paxos.proto";
+option java_outer_classname = "PaxosProto";
+
+
+message Empty {}
+
+
+message Ballot { int32 round = 1; int32 nodeId = 2; }
+
+
+message ClientRequest {
+  string clientId = 1;
+  int64 timestamp = 2;
+  string sender = 3;
+  string receiver = 4;
+  int32 amount = 5;
+}
+
+
+message Reply {
+  enum ResultType {
+    OTHER = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+
+  bool success = 1;
+  string message = 2;
+  int64 timestamp = 3;
+  Ballot leaderBallot = 4;
+  ResultType resultType = 5;
+}
+
+
+enum TwoPcTag {
+  NONE = 0;
+  PREPARE = 1;
+  COMMIT = 2;
+  ABORT = 3;
+}
+
+message AcceptMsg {
+  Ballot ballot = 1;
+  int32 seq = 2;
+  ClientRequest req = 3;
+  TwoPcTag twoPcTag = 4;
+}
+
+
+message Accepted {
+  Ballot b = 1;
+  int32 seq = 2;
+  int32 fromNode = 3;
+  bool ok = 4;
+  string reason = 5;
+}
+
+
+message CommitMsg {
+  Ballot ballot = 1;
+  int32 seq = 2;
+  ClientRequest req = 3;
+  TwoPcTag twoPcTag = 4;
+}
+
+message TwoPcPrepareMsg {
+
+  ClientRequest req = 1;
+}
+
+message TwoPcPrepareReply {
+  enum PrepareOutcome {
+    UNKNOWN = 0;
+    PREPARED = 1;
+    ABORTED = 2;
+  }
+
+  bool success = 1;
+  PrepareOutcome outcome = 2;
+  string message = 3;
+}
+
+message TwoPcDecideMsg {
+  ClientRequest req = 1;
+
+  enum Decision {
+    COMMIT = 0;
+    ABORT = 1;
+  }
+
+  Decision decision = 2;
+}
+
+message TwoPcDecideReply {
+  bool success = 1;
+  string message = 2;
+}
+
+
+message PrepareMsg { Ballot ballot = 1; }
+
+message PromiseMsg {
+  Ballot ballot = 1;
+  repeated AcceptMsg acc = 2;
+  bool ok = 3;
+  string reason = 4;
+  int32 checkpointSeq = 5;
+  string checkpointDigest = 6;
+  int32 nodeId = 7;
+}
+
+message NewViewMsg {
+  Ballot ballot = 1;
+  repeated AcceptMsg accepts = 2;
+  int32 checkpointSeq = 3;
+  string checkpointDigest = 4;
+}
+
+
+message NewViewReply {
+  repeated Accepted acks = 1;
+}
+
+message CheckpointMsg {
+  int32 seq = 1;
+  string digest = 2;
+  int32 sourceNodeId = 3;
+}
+
+message HeartbeatMsg {
+
+  int32 nodeId = 1;
+
+  Ballot ballot = 2;
+
+}
+
+
+
+message ViewDump {
+  repeated NewViewMsg views = 1;
+}
+
+
+
+message StatusQuery { int32 seq = 1; }
+
+
+enum TxnStatus { X = 0; A = 1; C = 2; E = 3; }
+
+
+message StatusReply { int32 nodeId = 1; int32 seq = 2; TxnStatus status = 3; }
+
+
+message LogEntryDump {
+  int32 seq = 1; string phase = 2; string clientId = 3; int64 ts = 4; string payload = 5;
+  TwoPcTag twoPcTag = 6;
+}
+message LogDump { repeated LogEntryDump entries = 1; }
+
+
+
+message AuditEntryDump {
+  int64 ts = 1;
+  int32 self = 2;
+  string dir = 3;
+  string kind = 4;
+  int32 peer = 5;
+  int32 ballotRound = 6;
+  int32 ballotNode = 7;
+  int32 seq = 8;
+  string clientId = 9;
+  int64 reqTs = 10;
+  string sender = 11;
+  string receiver = 12;
+  int64 amount = 13;
+  string note = 14;
+}
+message AuditDump { repeated AuditEntryDump entries = 1; }
+
+
+message KV { string key = 1; int32 value = 2; }
+message DBDump { repeated KV balances = 1; }
+
+message LivePeers { repeated int32 nodeIds = 1; }
+
+message ShardDelta {
+  repeated KV assign = 1;
+  repeated string drop = 2;
+}
+
+service NodeService {
+
+  rpc Submit (ClientRequest) returns (Reply);
+
+
+
+  rpc Accept (AcceptMsg) returns (Accepted);
+  rpc Commit (CommitMsg) returns (Empty);
+
+  rpc Prepare (PrepareMsg) returns (PromiseMsg);
+  rpc NewView (NewViewMsg) returns (Empty);
+
+  rpc NewViewWithAcks (NewViewMsg) returns (NewViewReply);
+  rpc Checkpoint (CheckpointMsg) returns (Empty);
+  rpc PrintView (Empty) returns (ViewDump);
+  rpc Heartbeat (HeartbeatMsg) returns (Empty);
+  rpc SetLivePeers (LivePeers) returns (Empty);
+
+
+  rpc TwoPcPrepare (TwoPcPrepareMsg) returns (TwoPcPrepareReply);
+  rpc TwoPcDecide (TwoPcDecideMsg) returns (TwoPcDecideReply);
+
+
+  rpc GetStatus (StatusQuery) returns (StatusReply);
+  rpc GetLog (Empty) returns (LogDump);
+  rpc GetAudit (Empty) returns (AuditDump);
+  rpc GetDB (Empty) returns (DBDump);
+
+  rpc GetDBOnDisk (Empty) returns (DBDump);
+
+  rpc GetModifiedDB (Empty) returns (DBDump);
+
+  rpc GetCheckpointSnapshot (Empty) returns (DBDump);
+  rpc ResetView (Empty) returns (Empty);
+
+
+  rpc SuspendForSet(Empty) returns (Empty);
+  rpc ResumeAfterSet(Empty) returns (Empty);
+  rpc PauseTimers(Empty) returns (Empty);
+  rpc ResumeTimers(Empty) returns (Empty);
+  rpc ApplyShardDelta(ShardDelta) returns (Empty);
+}
+
